@@ -269,4 +269,34 @@ Developed as part of a coursework assignment on:
 * DevOps practices
 * Flask application development
 
+▶️ How to Run the Application
+🔧 1. Clone the Repository
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+🐍 2. Set Up Python Environment
+python -m venv venv
+source venv/bin/activate   # On Windows: venv\Scripts\activate
+📦 3. Install Dependencies
+pip install -r requirements.txt
+▶️ 4. Run the Flask App
+python app.py
+
+Then open your browser at:
+
+http://127.0.0.1:5000/
+🧪 5. Run Tests
+pytest -q
+🐳 Run Using Docker (Recommended)
+🔨 Build the Image
+docker build -t todo-saas .
+▶️ Run the Container
+docker run -p 5000:5000 todo-saas
+
+Then open:
+
+http://localhost:5000/
+📥 Pull from DockerHub (if already pushed)
+docker pull qrq12/todo-saas:latest
+docker run -p 5000:5000 qrq12/todo-saas:latest
+
 
