@@ -347,8 +347,8 @@ http://localhost:5000/
 ### 📥 Pull from DockerHub (if already pushed)
 
 ```bash
-docker pull <dockerhub_user>/todo-saas:latest
-docker run -p 5000:5000 <dockerhub_user>/todo-saas:latest
+docker pull qrq12/todo-saas:latest
+docker run -p 5000:5000 qrq12/todo-saas:latest
 ```
 
 ---
