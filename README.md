@@ -269,9 +269,6 @@ Developed as part of a coursework assignment on:
 * DevOps practices
 * Flask application development
 
-Here’s a clean **“How to Run” section** you can append to your README 👇
-
----
 
 ## ▶️ How to Run the Application
 
@@ -356,5 +353,4 @@ docker run -p 5000:5000 <dockerhub_user>/todo-saas:latest
 
 ---
 
-If you want, I can **merge this into your full README** so it’s perfectly formatted and ready to submit 👍
 
