@@ -269,34 +269,92 @@ Developed as part of a coursework assignment on:
 * DevOps practices
 * Flask application development
 
-▶️ How to Run the Application
-🔧 1. Clone the Repository
+Here’s a clean **“How to Run” section** you can append to your README 👇
+
+---
+
+## ▶️ How to Run the Application
+
+### 🔧 1. Clone the Repository
+
+```bash
 git clone https://github.com/<your-username>/<your-repo>.git
 cd <your-repo>
-🐍 2. Set Up Python Environment
+```
+
+---
+
+### 🐍 2. Set Up Python Environment
+
+```bash
 python -m venv venv
 source venv/bin/activate   # On Windows: venv\Scripts\activate
-📦 3. Install Dependencies
+```
+
+---
+
+### 📦 3. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-▶️ 4. Run the Flask App
+```
+
+---
+
+### ▶️ 4. Run the Flask App
+
+```bash
 python app.py
+```
 
 Then open your browser at:
 
+```
 http://127.0.0.1:5000/
-🧪 5. Run Tests
+```
+
+---
+
+### 🧪 5. Run Tests
+
+```bash
 pytest -q
-🐳 Run Using Docker (Recommended)
-🔨 Build the Image
+```
+
+---
+
+## 🐳 Run Using Docker (Recommended)
+
+### 🔨 Build the Image
+
+```bash
 docker build -t todo-saas .
-▶️ Run the Container
+```
+
+---
+
+### ▶️ Run the Container
+
+```bash
 docker run -p 5000:5000 todo-saas
+```
 
 Then open:
 
+```
 http://localhost:5000/
-📥 Pull from DockerHub (if already pushed)
-docker pull qrq12/todo-saas:latest
-docker run -p 5000:5000 qrq12/todo-saas:latest
+```
 
+---
+
+### 📥 Pull from DockerHub (if already pushed)
+
+```bash
+docker pull <dockerhub_user>/todo-saas:latest
+docker run -p 5000:5000 <dockerhub_user>/todo-saas:latest
+```
+
+---
+
+If you want, I can **merge this into your full README** so it’s perfectly formatted and ready to submit 👍
 
