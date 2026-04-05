@@ -1,6 +1,5 @@
-# 📝 ToDo SaaS — Full-Stack Task Management Application
+# 📝 ToDo SaaS
 
-> A production-grade, multi-user **Flask** task management platform built with professional DevOps practices: feature branching, Docker containerization, automated testing, and CI/CD pipelines via GitHub Actions.
 
 ---
 
