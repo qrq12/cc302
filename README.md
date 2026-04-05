@@ -1,5 +1,6 @@
-# 📝 ToDo SaaS
+# 📝 ToDo SaaS — Full-Stack Task Management Application
 
+> A production-grade, multi-user **Flask** task management platform built with professional DevOps practices: feature branching, Docker containerization, automated testing, and CI/CD pipelines via GitHub Actions.
 
 ---
 
@@ -8,38 +9,16 @@
 1. [Project Overview](#-project-overview)
 2. [Architecture](#-architecture)
 3. [Features](#-features)
-   - [Authentication System](#1-authentication-system)
-   - [Task Management](#2-task-management)
-   - [Subtask System](#3-subtask-system)
-   - [Search, Filters & Sorting](#4-search-filters--sorting)
-   - [Statistics Dashboard](#5-statistics-dashboard)
 4. [API Reference](#-api-reference)
-   - [Auth Endpoints](#auth-endpoints)
-   - [Task Endpoints](#task-endpoints)
-   - [Subtask Endpoints](#subtask-endpoints)
-   - [Stats Endpoint](#stats-endpoint)
 5. [Git Workflow](#-git-workflow)
-   - [Branch Structure](#branch-structure)
-   - [Feature Branches](#feature-branches)
-   - [Workflow Rules](#workflow-rules)
 6. [Docker & Versioning](#-docker--versioning)
-   - [Image Details](#image-details)
-   - [Build & Push](#build--push)
 7. [CI/CD Pipeline](#-cicd-pipeline)
-   - [Continuous Integration](#continuous-integration-ci)
-   - [Continuous Delivery](#continuous-delivery-cd)
-   - [Secrets Management](#secrets-management)
 8. [Testing](#-testing)
-   - [Test Coverage](#test-coverage)
-   - [Running Tests](#running-tests)
 9. [Branch Protection & Quality Gates](#-branch-protection--quality-gates)
 10. [Project Structure](#-project-structure)
 11. [Local Setup & Running](#-local-setup--running)
-    - [Python Setup](#python-setup)
-    - [Running with Docker](#running-with-docker)
-    - [Environment Variables](#environment-variables)
 12. [Data Model](#-data-model)
-13. [Key Takeaways & Learning Outcomes](#-key-takeaways--learning-outcomes)
+13. [Key Takeaways](#-key-takeaways)
 14. [Author](#-author)
 
 ---
@@ -102,18 +81,9 @@ The application stores data in flat JSON files per user (no external database de
 
 ### 1. Authentication System
 
-A full multi-user auth system is implemented from scratch with no third-party auth libraries.
+Built from scratch — no third-party auth libraries. Passwords are SHA-256 hashed and stored in `users.json`. A `require_login()` guard on all task/stats routes returns `401` if no session exists. Users are auto-logged-in after registration.
 
-- **Registration** (`POST /api/register`): Creates a new user with validation (min lengths, allowed characters). Passwords are SHA-256 hashed before storage. User is automatically logged in on success.
-- **Login** (`POST /api/login`): Authenticates against hashed password. Sets a secure server-side session.
-- **Logout** (`POST /api/logout`): Clears the session entirely.
-- **Session check** (`GET /api/me`): Returns the currently logged-in username.
-- **Login guard**: All task and stats routes return `401 Unauthorized` if no valid session is present.
-
-**Validation rules enforced:**
-- Username: minimum 3 characters, alphanumeric + `-_` only
-- Password: minimum 4 characters
-- No duplicate usernames
+**Validation:** username ≥ 3 chars (alphanumeric + `-_`), password ≥ 4 chars, no duplicate usernames.
 
 ---
 
@@ -139,43 +109,23 @@ A dedicated **toggle endpoint** (`PUT /api/tasks/<id>/toggle`) flips `completed`
 
 ### 3. Subtask System
 
-Tasks can have nested subtasks, supporting:
-
-- **Create, update, delete** subtasks independently of their parent task
-- **Drag-and-drop reordering** via `PUT /api/tasks/<id>/subtasks/reorder` — accepts an ordered list of subtask IDs and updates the `order` field on each
-- **Cascade delete**: Deleting a parent task automatically removes all its subtasks
-- **Ordered retrieval**: Subtasks are always returned sorted by their `order` field
+Tasks support nested subtasks with full CRUD, cascade delete (removing a parent task wipes its subtasks), and drag-and-drop reordering via `PUT /api/tasks/<id>/subtasks/reorder` — accepts an ordered array of subtask IDs and updates the `order` field on each. Subtasks are always returned sorted by `order`.
 
 ---
 
 ### 4. Search, Filters & Sorting
 
-- **Search**: Query tasks by title and description using the `q` query parameter
-- **Filter by status**: Completed / Pending
-- **Filter by priority**: High / Medium / Low
-- **Filter by due date**: Overdue, Today, This Week
-- **Sort by**: Due date, Created date, Priority
+Search tasks by title and description (`?q=`). Filter by status (completed/pending), priority (High/Medium/Low), and due date (overdue, today, this week). Sort by due date, created date, or priority.
 
 ---
 
 ### 5. Statistics Dashboard
 
-The `GET /api/stats` endpoint returns a live summary for the current user:
+Returns total, completed, and pending counts, plus `priority_counts` (incomplete tasks only per priority level — useful for a live work-queue view):
 
 ```json
-{
-  "total": 12,
-  "completed": 5,
-  "pending": 7,
-  "priority_counts": {
-    "High": 2,
-    "Medium": 3,
-    "Low": 2
-  }
-}
+{ "total": 12, "completed": 5, "pending": 7, "priority_counts": { "High": 2, "Medium": 3, "Low": 2 } }
 ```
-
-`priority_counts` only counts **incomplete** tasks per priority level, making it useful for a live work-queue dashboard.
 
 ---
 
@@ -293,40 +243,13 @@ The CD pipeline handles these steps automatically on every GitHub Release — no
 
 ## ⚙️ CI/CD Pipeline
 
-### Continuous Integration (CI)
+### Continuous Integration (`ci.yml`)
+Triggers on push to `main`/`dev` and all PRs. Steps: checkout → install deps → `flake8` lint → `pytest`. A failing step blocks the PR from merging.
 
-**File:** `.github/workflows/ci.yml`
+### Continuous Delivery (`cd.yml`)
+Triggers on GitHub Release publish. Steps: checkout → extract version from tag (e.g. `v0.1.0` → `0.1.0`) → DockerHub login → build & push versioned image → tag and push as `latest`.
 
-**Triggers:**
-- Push to `main` or `dev`
-- Any Pull Request
-
-**Steps:**
-1. Checkout code
-2. Set up Python
-3. Install dependencies (`pip install -r requirements.txt`)
-4. Run linter (`flake8`)
-5. Run test suite (`pytest`)
-
-If any step fails, the PR is blocked from merging.
-
-### Continuous Delivery (CD)
-
-**File:** `.github/workflows/cd.yml`
-
-**Trigger:** GitHub Release published
-
-**Steps:**
-1. Checkout code
-2. Extract version from release tag (e.g., `v0.1.0` → `0.1.0`)
-3. Log in to DockerHub using stored secrets
-4. Build Docker image with extracted version tag
-5. Push versioned image to DockerHub
-6. Tag and push as `latest`
-
-### Secrets Management
-
-Stored as GitHub Actions repository secrets — never hardcoded in workflow files.
+### Secrets
 
 | Secret | Purpose |
 |---|---|
@@ -337,54 +260,32 @@ Stored as GitHub Actions repository secrets — never hardcoded in workflow file
 
 ## 🧪 Testing
 
-Tests are written using **pytest** with Flask's built-in test client, meaning tests run against the actual app logic without spinning up a real server.
+Uses **pytest** with Flask's test client — no real server needed. Tests follow a full CRUD lifecycle: create → assert exists → update → assert changes → delete → assert removed.
 
-### Test Coverage
-
-| Test | What It Verifies |
+| Test | Verifies |
 |---|---|
-| `test_create_task` | Task is created and returned with correct fields |
-| `test_read_task` | Created task appears in the task list |
-| `test_update_task` | Updated fields are persisted correctly |
-| `test_delete_task` | Task is removed and no longer retrievable |
-| `test_toggle_task` | `completed` flag flips on each toggle call |
-
-### Test Flow (CRUD Lifecycle)
-
-```
-Create task → Assert exists → Update task → Assert changes → Delete task → Assert removed
-```
-
-### Running Tests
+| `test_create_task` | Task created with correct fields |
+| `test_read_task` | Task appears in list |
+| `test_update_task` | Changes persisted |
+| `test_delete_task` | Task no longer retrievable |
+| `test_toggle_task` | `completed` flips correctly |
 
 ```bash
-# Run all tests (quiet output)
-pytest -q
-
-# Verbose output
-pytest -v
-
-# Run a specific test file
-pytest tests/test_crud.py
+pytest -q          # quiet
+pytest -v          # verbose
+pytest tests/test_crud.py  # single file
 ```
 
 ---
 
 ## 🛡️ Branch Protection & Quality Gates
 
-Branch protection is enabled on both `dev` and `main`.
-
-**Rules enforced:**
-- Pull Request required before merging (no direct pushes)
-- All CI status checks must pass before merge is allowed
-- At least one approving review required (recommended for team use)
-
-**Live demonstration of gates working:**
+Enabled on `dev` and `main`. PRs required before merging; all CI checks must pass.
 
 | Scenario | Result |
 |---|---|
-| Introduced a failing test → pushed to feature branch | ❌ CI failed → PR blocked from merging to dev |
-| Fixed the test → pushed again | ✅ CI passed → PR approved and merged |
+| Pushed a failing test | ❌ CI failed → merge blocked |
+| Fixed the test and re-pushed | ✅ CI passed → merge allowed |
 | Merged dev → main | ✅ Full pipeline ran cleanly |
 
 ---
@@ -414,58 +315,31 @@ Branch protection is enabled on both `dev` and `main`.
 
 ## 🖥️ Local Setup & Running
 
-### Python Setup
-
+**Python:**
 ```bash
-# 1. Clone the repository
-git clone https://github.com/<your-username>/<your-repo>.git
-cd <your-repo>
-
-# 2. Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate        # macOS/Linux
-# venv\Scripts\activate         # Windows
-
-# 3. Install dependencies
+git clone https://github.com/<your-username>/<your-repo>.git && cd <your-repo>
+python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# 4. Run the app
 python app.py
 ```
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-Then open: [http://127.0.0.1:5000](http://127.0.0.1:5000)
-
-### Running with Docker
-
+**Docker:**
 ```bash
-# Option A: Build locally
-docker build -t todo-saas .
-docker run -p 5000:5000 todo-saas
+# Build locally
+docker build -t todo-saas . && docker run -p 5000:5000 todo-saas
 
-# Option B: Pull from DockerHub
+# Or pull from DockerHub
 docker pull qrq12/todo-saas:latest
-docker run -p 5000:5000 qrq12/todo-saas:latest
-```
-
-Then open: [http://localhost:5000](http://localhost:5000)
-
-### Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `SECRET_KEY` | Random hex (generated at startup) | Flask session secret. **Set this in production** — a random key means all sessions invalidate on every restart. |
-| `PORT` | `5000` | Port Flask listens on |
-
-To set a persistent secret key:
-```bash
-export SECRET_KEY="your-long-random-secret-here"
-python app.py
-```
-
-Or in Docker:
-```bash
 docker run -p 5000:5000 -e SECRET_KEY="your-secret" qrq12/todo-saas:latest
 ```
+
+**Environment Variables:**
+
+| Variable | Default | Notes |
+|---|---|---|
+| `SECRET_KEY` | Random hex at startup | **Set this in production** — random key invalidates all sessions on restart |
+| `PORT` | `5000` | Flask listen port |
 
 ---
 
@@ -516,29 +390,14 @@ docker run -p 5000:5000 -e SECRET_KEY="your-secret" qrq12/todo-saas:latest
 
 ---
 
-## 📌 Key Takeaways & Learning Outcomes
+## 📌 Key Takeaways
 
-Through this project, the following real-world engineering skills were practised end-to-end:
-
-**Git & Collaboration**
-- Feature branch strategy keeps development organized and safe
-- Pull Requests enforce code review and prevent broken code from reaching main
-- Resolving merge conflicts and maintaining a clean commit history
-
-**Backend Development**
-- Designing a RESTful API with proper HTTP status codes
-- Implementing multi-user data isolation without a database
-- Session-based authentication with secure password hashing
-
-**DevOps & Infrastructure**
-- Docker ensures identical environments across dev, CI, and production
-- Semantic versioning gives clear, human-readable release history
-- GitHub Releases act as deployment triggers for the CD pipeline
-
-**Quality Engineering**
-- Automated tests catch regressions before they reach main
-- Branch protection rules enforce quality gates — CI isn't optional
-- Linting enforces code style consistency across the codebase
+| Area | Skill Practised |
+|---|---|
+| **Git** | Feature branching, PRs, merge conflict resolution, clean commit history |
+| **Backend** | REST API design, multi-user data isolation, session auth + password hashing |
+| **DevOps** | Docker containerisation, semantic versioning, GitHub Releases as deploy triggers |
+| **Quality** | Automated tests, branch protection, linting enforcement |
 
 ---
 
